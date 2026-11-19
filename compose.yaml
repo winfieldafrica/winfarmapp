@@ -1,0 +1,37 @@
+# Local development infrastructure only (addendum §I.1: fixtures only, never real data).
+# Ports bind to 127.0.0.1 so nothing is exposed beyond this machine.
+# The postgres password below is a fixed local-only dummy (the local migration owner). Production values live in the host secret manager.
+name: winfield
+
+services:
+  postgres:
+    image: postgres:16.16-alpine@sha256:1d5b02d3a9941fbd52437db4107f8c52d6297dac553ca1e5c299ebb3756b4857
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local-dev-only
+      POSTGRES_DB: winfield
+    ports: ['127.0.0.1:5432:5432']
+    volumes: ['pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7.4.12-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    command: ['redis-server', '--appendonly', 'yes']
+    ports: ['127.0.0.1:6379:6379']
+    volumes: ['redisdata:/data']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # S3-compatible store: NOT YET ADDED. The approved choice (MinIO) no longer publishes images on
+  # Docker Hub and quay.io is unreachable from the build environment. Awaiting a decision; see docs/assumptions.md.
+
+volumes:
+  pgdata:
+  redisdata:
