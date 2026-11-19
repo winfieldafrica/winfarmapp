@@ -38,6 +38,21 @@ Evidence for each milestone. Only results that were actually run and observed ar
 | gitleaks `dir` mode (working tree) | 4 hits, all in `apps/console/.next/` (Next dev cache, gitignored, never committed) |
 | Semgrep OSS 1.186.0 | **could not run locally**: `semgrep.dev` (rule registry) is blocked by this environment's proxy. Runs in CI. |
 
+### CI on GitHub (PR #1)
+
+First run, head `6bf8e47`:
+
+| Job | Result |
+|---|---|
+| install, baseline, lint, typecheck, test, audit | success |
+| docker compose up + /health on every service | success |
+| secret scan (gitleaks) | success |
+| SAST (Semgrep OSS) | **failure**: 7 blocking findings, all missing supply-chain settings (pnpm `minimumReleaseAge`, `trustPolicy`, `blockExoticSubdeps`; npm `min-release-age`; Dependabot `cooldown` ×3) |
+
+Fix: settings added (assumptions T15); the lockfile was re-resolved under them (0 of 708 packages younger than
+7 days; five direct pins moved back one patch); one version-exact trust exemption, `undici-types@6.21.0`, with evidence
+(assumptions T16). Local re-run: install, baseline, lint, typecheck, tests 9/9, audit gate all pass. Second CI run: see PR.
+
 ### Not done
 
 - **S3-compatible store in compose**: blocked (assumptions I4).

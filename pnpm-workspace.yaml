@@ -1,3 +1,14 @@
 packages:
   - apps/*
   - packages/*
+
+# Supply-chain hardening (Semgrep package_managers rules; docs/assumptions.md T15)
+# Do not install any package version published less than 7 days ago.
+minimumReleaseAge: 10080
+# Refuse a package version whose publish-trust evidence is weaker than an earlier version's.
+trustPolicy: no-downgrade
+# Transitive dependencies may only come from the registry, never git/tarball URLs.
+blockExoticSubdeps: true
+# Narrow, version-exact exemptions from trustPolicy, each with evidence in docs/assumptions.md (T15).
+trustPolicyExclude:
+  - undici-types@6.21.0

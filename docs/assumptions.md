@@ -57,11 +57,13 @@ Secrets in `.env.example` match setup guide Part 6.3 exactly. These **non-secret
 | T11 | gitleaks runs from its published container in CI, not `gitleaks-action` (which needs a paid licence for organisations). | Assumed |
 | T12 | Semgrep excludes `docs/` and `database/` (supplied, unmodifiable files); everything we write is scanned. | Assumed |
 | T13 | GitHub Actions are pinned to full commit SHAs (checkout v7.0.1, setup-node v7.1.0, pnpm/action-setup v6.1.1). | Assumed |
-| T14 | CI fails on `pnpm audit --audit-level high`. Dependabot covers npm, GitHub Actions and docker-compose images weekly. | Decided |
+| T14 | CI fails on `pnpm audit --audit-level high`. Dependabot covers npm, GitHub Actions and docker-compose images weekly, with a 7-day `cooldown`. | Decided |
+| T15 | Supply-chain settings (added after Semgrep's first CI run flagged their absence, 7 blocking findings): `pnpm-workspace.yaml` sets `minimumReleaseAge: 10080` (no version younger than 7 days), `trustPolicy: no-downgrade` (refuse a version with weaker publish-trust evidence than an earlier one) and `blockExoticSubdeps: true` (transitive deps only from the registry); `.npmrc` sets `min-release-age=7`. The lockfile was re-resolved from scratch under these rules: 708 packages, **0 younger than 7 days** (checked against registry publish times). | Assumed (Semgrep rule) |
+| T16 | **Trust-policy exemption, version-exact: `undici-types@6.21.0`.** Required by every `@types/node` 22.x (`~6.21.0`). Evidence: published 2024-11-13 by `matteo.collina` (Undici lead maintainer) before the project adopted npm provenance; pnpm compares by publish date, and later-published versions on other release lines carry provenance, so this older release looks like a "downgrade". Not a takeover signal. Removing the exemption means leaving Node 22 type definitions. | **Owner to confirm** |
 
 ## Dependencies added (M0)
 
-Every version is pinned exactly (`save-exact=true`); `pnpm-lock.yaml` is committed. Each name was checked on the
+Every version is pinned exactly (`save-exact=true`); `pnpm-lock.yaml` is committed. Direct pins are the newest version at least 7 days old (T15); eslint, typescript-eslint, vitest, expo and NestJS were each moved back one patch release for this. Each name was checked on the
 npm registry for the official repository URL and package age before adding (typosquat check). pnpm 10 blocks
 dependency install scripts by default; after install **no installed package declares a preinstall/install/postinstall
 script**, so none was allowed to run.
@@ -70,19 +72,19 @@ script**, so none was allowed to run.
 |---|---|---|---|---|
 | typescript | 6.0.3 | root dev | Language (addendum §B) | Stack + named |
 | @types/node | 22.20.5 | root dev | Node type definitions | Named |
-| eslint | 10.15.0 | root dev | Lint | Approved list |
-| @eslint/js, typescript-eslint, eslint-config-prettier, globals | 10.0.1, 8.73.0, 10.1.8, 17.14.0 | root dev | ESLint for TypeScript, Prettier compatibility, environment globals | Named |
+| eslint | 10.14.0 | root dev | Lint | Approved list |
+| @eslint/js, typescript-eslint, eslint-config-prettier, globals | 10.0.1, 8.72.2, 10.1.8, 17.14.0 | root dev | ESLint for TypeScript, Prettier compatibility, environment globals | Named |
 | prettier | 3.10.1 | root dev | Formatting | Approved list |
-| vitest | 5.1.1 | root dev | Unit tests | Approved list |
-| @nestjs/common, @nestjs/core, @nestjs/platform-fastify | 12.5.1 | api | API framework (NestJS on Fastify) | Stack |
+| vitest | 5.1.0 | root dev | Unit tests | Approved list |
+| @nestjs/common, @nestjs/core, @nestjs/platform-fastify | 12.5.0 | api | API framework (NestJS on Fastify) | Stack |
 | reflect-metadata, rxjs | 0.2.2, 7.8.2 | api | Required peers of NestJS | Named |
 | fastify | 5.12.8 | ingest | Ingest service (addendum §B) | Stack |
 | zod | 4.6.7 | shared, api | Validation (addendum §B) | Stack |
 | next, react, react-dom | 16.4.6, 19.3.0, 19.3.0 | console | Web console (addendum §B) | Stack |
 | @types/react, @types/react-dom | 19.3.0 | console, mobile | React type definitions | Stack (TypeScript) |
-| expo, react-native | 58.0.26, 0.88.1 | mobile | Mobile app (addendum §B); versions from Expo's own `bundledNativeModules.json` | Stack |
+| expo, react-native | 58.0.25, 0.88.1 | mobile | Mobile app (addendum §B); versions from Expo's own `bundledNativeModules.json` | Stack |
 
-Notable transitive dependency: `noxcturnal` 0.1.14 comes from `@expo/metro-config` (repository `github.com/expo/noxcturnal`,
+Notable transitive dependency: `noxcturnal` (0.1.13 after re-resolution) comes from `@expo/metro-config` (repository `github.com/expo/noxcturnal`,
 Expo maintainer). Checked because the name was unfamiliar; legitimate.
 
 Known advisory at M0 (below the high/critical gate): **moderate**, `minimatch` < 11.0.1 (ReDoS via glob
