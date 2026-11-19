@@ -1,0 +1,22 @@
+{
+  "name": "@winfield/console",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port ${CONSOLE_PORT:-3000}",
+    "build": "next build",
+    "start": "next start --port ${CONSOLE_PORT:-3000}",
+    "typecheck": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@winfield/shared": "workspace:*",
+    "next": "16.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}
