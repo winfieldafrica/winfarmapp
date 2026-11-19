@@ -4,7 +4,7 @@ Evidence for each milestone. Only results that were actually run and observed ar
 
 ## M0: Monorepo scaffold
 
-**Status: built; acceptance partly verified. Not done: S3 store in compose, CI run on GitHub (see below).**
+**Status: built; acceptance checks pass locally and in CI. S3 store deferred to M5 by owner ruling.**
 
 ### Built
 
@@ -51,10 +51,11 @@ First run, head `6bf8e47`:
 
 Fix: settings added (assumptions T15); the lockfile was re-resolved under them (0 of 708 packages younger than
 7 days; five direct pins moved back one patch); one version-exact trust exemption, `undici-types@6.21.0`, with evidence
-(assumptions T16). Local re-run: install, baseline, lint, typecheck, tests 9/9, audit gate all pass. Second CI run: see PR.
+(assumptions T16). Local re-run: install, baseline, lint, typecheck, tests 9/9, audit gate all pass. 
+
+Second run, head `6fb688d`: **all four jobs green.** Semgrep: 254 rules, 61 files, **0 findings**. gitleaks: no leaks.
 
 ### Not done
 
 - **S3-compatible store in compose**: blocked (assumptions I4).
-- **"CI runs green on a clean clone"**: not yet observed; needs the PR pushed and Actions to run.
-- Semgrep has not run anywhere yet (blocked locally).
+- Semgrep cannot run in the build environment (registry blocked); it runs in CI only.
