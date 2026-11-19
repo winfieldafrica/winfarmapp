@@ -36,7 +36,7 @@ Secrets in `.env.example` match setup guide Part 6.3 exactly. These **non-secret
 | I1 | `compose.yaml` lives at the repository root (not `infra/`) because the setup guide's command is a plain `docker compose up -d` from the root. | Assumed |
 | I2 | Images pinned by tag **and** digest: `postgres:16.16-alpine`, `redis:7.4.12-alpine`. Ports bind to 127.0.0.1 only. | Assumed |
 | I3 | Local Postgres superuser password is the fixed dummy `local-dev-only`; locally the superuser is the migration owner. Never used outside local/CI. | Assumed |
-| I4 | **S3-compatible store not yet in compose.** MinIO no longer publishes images on Docker Hub (`minio/minio` returns "repository does not exist"), and `quay.io` is blocked from the build environment, so no MinIO image could be pulled or verified. | **Open: needs decision** |
+| I4 | **S3-compatible store not yet in compose.** MinIO no longer publishes images on Docker Hub (`minio/minio` returns "repository does not exist"), and `quay.io` is blocked from the build environment, so no MinIO image could be pulled or verified. **Ruling: S3 stays out of compose until M5; the unmaintained quay.io MinIO image must not be used. At M5, 2–3 maintained candidates (licence, image source, digest verification) go to the owner to choose.** `S3_*` names stay in `.env.example`. | Decided |
 | I5 | ClamAV is added to compose in M5 (when the scan job exists), not M0. | Assumed |
 | I6 | Redis 7.4 chosen over 8.x to stay on the long-used BullMQ-tested line; production uses the host's managed Redis. | Assumed |
 
@@ -86,4 +86,12 @@ Notable transitive dependency: `noxcturnal` 0.1.14 comes from `@expo/metro-confi
 Expo maintainer). Checked because the name was unfamiliar; legitimate.
 
 Known advisory at M0 (below the high/critical gate): **moderate**, `minimatch` < 11.0.1 (ReDoS via glob
-amplification), via `expo > @expo/fingerprint`. Build-time tool only; will clear when Expo updates.
+amplification), via `expo > @expo/fingerprint`. Build-time tool only. **Accepted by the owner for now; re-check at M7.**
+
+## Rulings for M1 (recorded at M0 review)
+
+| # | Item | Status |
+|---|---|---|
+| R1 | `pnpm db:migrate` uses a custom runner: one transaction per file, records each applied file with its SHA-256, refuses if an applied file's checksum changed, never drops anything, never loads fixtures, runs only as the migration owner. | Decided |
+| R2 | `pnpm db:test` calls `database/run_all.sh` unchanged. | Decided |
+| R3 | A guard in the root script (not inside `database/`) refuses `db:test`/`run_all.sh` unless the target is the local compose database. It must never be pointable at staging or production. | Decided |
